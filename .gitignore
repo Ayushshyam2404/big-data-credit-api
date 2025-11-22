@@ -1,0 +1,9 @@
+```text
+__pycache__/
+*.pyc
+.DS_Store
+.env
+venv/
+clickhouse_data_v5/
+clickhouse_fresh_data/
+clickhouse_data_FINAL/
