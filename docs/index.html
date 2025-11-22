@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Data + Credit API System - Architecture Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #bfdbfe;
+            font-size: 1rem;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            overflow-x: auto;
+            background: white;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab:hover {
+            background: #f9fafb;
+            color: #1f2937;
+        }
+
+        .tab.active {
+            color: #2563eb;
+            background: #eff6ff;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            color: #374151;
+            margin-bottom: 0.75rem;
+        }
+
+        h4 {
+            font-size: 1rem;
+            color: #4b5563;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .info-box.blue {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        .info-box.green {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+
+        .info-box.purple {
+            background: #faf5ff;
+            border: 1px solid #e9d5ff;
+        }
+
+        .info-box.yellow {
+            background: #fefce8;
+            border: 1px solid #fde047;
+        }
+
+        .info-box.orange {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+        }
+
+        .info-box.red {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+        }
+
+        .info-box.gray {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.75rem;
+            margin: 0.5rem 0;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .architecture-flow {
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid #d1d5db;
+        }
+
+        .flow-step {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #6b7280;
+            margin: 0.25rem 0;
+        }
+
+        .phase {
+            border-left: 4px solid;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .phase.blue { border-color: #3b82f6; }
+        .phase.green { border-color: #10b981; }
+        .phase.purple { border-color: #a855f7; }
+        .phase.orange { border-color: #f97316; }
+        .phase.red { border-color: #ef4444; }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .tab {
+                padding: 0.75rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Big Data + Credit API System</h1>
+                <p>Complete Architecture & Implementation Guide</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">📊 Overview</button>
+                <button class="tab" data-tab="stack">⚙️ Tech Stack</button>
+                <button class="tab" data-tab="architecture">☁️ Architecture</button>
+                <button class="tab" data-tab="ingestion">💾 Ingestion</button>
+                <button class="tab" data-tab="api">⚡ API Design</button>
+                <button class="tab" data-tab="credit">🔒 Credit System</button>
+                <button class="tab" data-tab="implementation">📝 Implementation</button>
+                <button class="tab" data-tab="deployment">📈 Deployment</button>
+            </div>
+
+            <div class="content">
+                <!-- Overview Tab -->
+                <div class="tab-content active" id="overview">
+                    <h2>Project Requirements Summary</h2>
+                    
+                    <div class="info-box blue">
+                        <h3>Core Objectives</h3>
+                        <ul>
+                            <li>✓ Ingest 70M-700M+ records from multiple formats</li>
+                            <li>✓ Normalize and unify data schemas</li>
+                            <li>✓ Build scalable storage solution</li>
+                            <li>✓ Create credit-based API system</li>
+                            <li>✓ Implement authentication & logging</li>
+                        </ul>
+                    </div>
+
+                    <div class="grid">
+                        <div class="info-box green">
+                            <h4>Data Formats Supported</h4>
+                            <p style="font-size: 0.875rem;">CSV, JSON/JSONL, XML, Parquet, SQL dumps, Excel</p>
+                        </div>
+                        <div class="info-box purple">
+                            <h4>Scale Target</h4>
+                            <p style="font-size: 0.875rem;">Phase I: 70-200M records<br>Phase II: 300-700M+ records</p>
+                        </div>
+                    </div>
+
+                    <div class="info-box yellow">
+                        <h3>Key Challenges</h3>
+                        <ul>
+                            <li>Multi-schema unification</li>
+                            <li>Duplicate detection at scale</li>
+                            <li>Low-latency API responses</li>
+                            <li>Credit tracking per request</li>
+                            <li>Horizontal scalability</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tech Stack Tab -->
+                <div class="tab-content" id="stack">
+                    <h2>Recommended Technology Stack</h2>
+
+                    <div class="card-item" style="margin-bottom: 1rem;">
+                        <h3>💾 Storage Layer</h3>
+                        <div class="info-box blue">
+                            <p><strong>Primary: ClickHouse</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                ✓ Columnar storage for fast analytics<br>
+                                ✓ Handles 1B+ rows easily<br>
+                                ✓ Low query latency (&lt;100ms)<br>
+                                ✓ Built-in partitioning & sharding
+                            </p>
+                        </div>
+                        <div class="info-box gray">
+                            <p><strong>Alternative: PostgreSQL + Citus</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">For relational needs & ACID compliance</p>
+                        </div>
+                    </div>
+
+                    <div class="card-item" style="margin-bottom: 1rem;">
+                        <h3>🔄 Processing Engine</h3>
+                        <div class="info-box orange">
+                            <p><strong>Apache Spark (PySpark)</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                ✓ Distributed processing<br>
+                                ✓ Multi-format support<br>
+                                ✓ DataFrame API for transformations<br>
+                                ✓ Direct write to ClickHouse
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-item" style="margin-bottom: 1rem;">
+                        <h3>🚀 API Layer</h3>
+                        <div class="info-box green">
+                            <p><strong>FastAPI (Python) + Redis</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                ✓ High performance async API<br>
+                                ✓ Automatic OpenAPI docs<br>
+                                ✓ Redis for caching & rate limiting
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="card-item" style="margin-bottom: 1rem;">
+                        <h3>🎯 Orchestration</h3>
+                        <div class="info-box purple">
+                            <p><strong>Apache Airflow</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">Schedule ingestion jobs, monitor pipelines</p>
+                        </div>
+                    </div>
+
+                    <div class="card-item">
+                        <h3>☁️ Infrastructure</h3>
+                        <div class="info-box blue">
+                            <p><strong>AWS / Docker + Kubernetes</strong></p>
+                            <p style="font-size: 0.875rem; margin-top: 0.5rem;">S3 for raw data lake, EC2/EKS for compute</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture Tab -->
+                <div class="tab-content" id="architecture">
+                    <h2>System Architecture</h2>
+
+                    <div class="architecture-flow">
+                        <div class="flow-step" style="background: #dbeafe;">
+                            <strong>📥 INGESTION LAYER</strong><br>
+                            Raw Files (S3) → Spark Jobs → Schema Detection → Validation
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step" style="background: #dcfce7;">
+                            <strong>🔄 PROCESSING LAYER</strong><br>
+                            Normalization → Deduplication → Master Schema Mapping
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step" style="background: #f3e8ff;">
+                            <strong>💾 STORAGE LAYER</strong><br>
+                            ClickHouse Cluster (Sharded + Replicated)
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step" style="background: #fed7aa;">
+                            <strong>🚀 API LAYER</strong><br>
+                            FastAPI + Redis Cache → Credit Check → Query Execution
+                        </div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-step" style="background: #fecaca;">
+                            <strong>👤 CLIENT</strong><br>
+                            API Key Auth → JSON Response
+                        </div>
+                    </div>
+
+                    <div class="grid" style="margin-top: 1.5rem;">
+                        <div class="card-item">
+                            <h3>Scalability Strategy</h3>
+                            <ul>
+                                <li>Horizontal sharding by date/region</li>
+                                <li>Read replicas for API queries</li>
+                                <li>Redis cluster for caching</li>
+                                <li>Kubernetes auto-scaling</li>
+                            </ul>
+                        </div>
+                        <div class="card-item">
+                            <h3>Fault Tolerance</h3>
+                            <ul>
+                                <li>Multi-AZ deployment</li>
+                                <li>Data replication (3x)</li>
+                                <li>Circuit breakers in API</li>
+                                <li>Dead letter queues</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ingestion Tab -->
+                <div class="tab-content" id="ingestion">
+                    <h2>Data Ingestion Pipeline</h2>
+
+                    <div class="info-box blue">
+                        <h3>Master Schema Design</h3>
+                        <pre>{
+  "id": "UUID (generated)",
+  "source_file": "original filename",
+  "record_hash": "MD5 for deduplication",
+  "ingested_at": "timestamp",
+  
+  "user_id": "string",
+  "email": "string",
+  "name": "string",
+  "phone": "string",
+  "address": "string",
+  "city": "string",
+  "country": "string",
+  "created_date": "date",
+  "status": "string",
+  
+  "metadata": "JSON object",
+  "data_quality_score": "float",
+  "validation_errors": "array"
+}</pre>
+                    </div>
+
+                    <div class="card-item">
+                        <h3>Ingestion Steps</h3>
+                        <ol>
+                            <li><strong>File Discovery:</strong> Scan S3 bucket for new files</li>
+                            <li><strong>Format Detection:</strong> Auto-detect CSV/JSON/XML/Parquet</li>
+                            <li><strong>Schema Inference:</strong> Map fields to master schema</li>
+                            <li><strong>Validation:</strong> Check data types, required fields</li>
+                            <li><strong>Cleansing:</strong> Trim whitespace, normalize formats</li>
+                            <li><strong>Deduplication:</strong> Hash-based duplicate removal</li>
+                            <li><strong>Load:</strong> Batch insert into ClickHouse</li>
+                            <li><strong>Logging:</strong> Record ingestion metrics</li>
+                        </ol>
+                    </div>
+
+                    <div class="info-box yellow">
+                        <h3>Performance Targets</h3>
+                        <ul>
+                            <li>Ingest rate: 100K+ records/second</li>
+                            <li>Spark cluster: 5-10 worker nodes</li>
+                            <li>Batch size: 1M records per batch</li>
+                            <li>Error tolerance: &lt;0.1% failure rate</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- API Design Tab -->
+                <div class="tab-content" id="api">
+                    <h2>API Design Specification</h2>
+
+                    <div class="card-item">
+                        <h3>Endpoint Structure</h3>
+                        <div class="info-box blue">
+                            <p style="font-family: monospace; font-size: 0.875rem;"><strong>POST /api/v1/query</strong></p>
+                            <p style="font-size: 0.75rem; margin-top: 0.25rem;">Main data query endpoint with filters</p>
+                        </div>
+                        <div class="info-box green">
+                            <p style="font-family: monospace; font-size: 0.875rem;"><strong>GET /api/v1/credits</strong></p>
+                            <p style="font-size: 0.75rem; margin-top: 0.25rem;">Check remaining credits</p>
+                        </div>
+                        <div class="info-box purple">
+                            <p style="font-family: monospace; font-size: 0.875rem;"><strong>GET /api/v1/usage</strong></p>
+                            <p style="font-size: 0.75rem; margin-top: 0.25rem;">View usage history</p>
+                        </div>
+                    </div>
+
+                    <div class="card-item">
+                        <h3>Sample Query Request</h3>
+                        <pre>POST /api/v1/query
+Headers:
+  X-API-Key: sk_live_abc123xyz
+
+Body:
+{
+  "filters": {
+    "country": "USA",
+    "created_date": {
+      "gte": "2024-01-01",
+      "lte": "2024-12-31"
+    },
+    "status": ["active", "pending"]
+  },
+  "fields": ["user_id", "email", "name"],
+  "limit": 1000,
+  "offset": 0
+}</pre>
+                    </div>
+
+                    <div class="card-item">
+                        <h3>Sample Response</h3>
+                        <pre>{
+  "status": "success",
+  "data": [{
+    "user_id": "usr_123",
+    "email": "user@example.com",
+    "name": "John Doe"
+  }],
+  "metadata": {
+    "total_records": 25847,
+    "returned": 1000,
+    "credits_used": 10,
+    "credits_remaining": 990,
+    "query_time_ms": 45
+  }
+}</pre>
+                    </div>
+
+                    <div class="info-box red">
+                        <h3>Error Response</h3>
+                        <pre>{
+  "status": "error",
+  "error": {
+    "code": "INSUFFICIENT_CREDITS",
+    "message": "Required: 10, Available: 5"
+  }
+}</pre>
+                    </div>
+                </div>
+
+                <!-- Credit System Tab -->
+                <div class="tab-content" id="credit">
+                    <h2>Credit Management System</h2>
+
+                    <div class="card-item">
+                        <h3>Credit Calculation</h3>
+                        <div class="info-box blue">
+                            <pre>Credits = BASE_COST (1) + (RECORDS / 100)
+
+Examples:
+- 100 records = 2 credits
+- 1000 records = 11 credits
+- 10000 records = 101 credits</pre>
+                        </div>
+                    </div>
+
+                    <div class="card-item">
+                        <h3>Database Schema</h3>
+                        <pre>CREATE TABLE users (
+  id UUID PRIMARY KEY,
+  email VARCHAR(255) UNIQUE,
+  api_key VARCHAR(64) UNIQUE,
+  credits_balance INTEGER DEFAULT 0,
+  created_at TIMESTAMP
+);
+
+CREATE TABLE credit_transactions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  amount INTEGER,
+  type ENUM('credit', 'debit'),
+  reason VARCHAR(255),
+  created_at TIMESTAMP
+);
+
+CREATE TABLE api_usage_logs (
+  id UUID PRIMARY KEY,
+  user_id UUID,
+  endpoint VARCHAR(255),
+  query_params JSONB,
+  credits_used INTEGER,
+  response_time_ms INTEGER,
+  created_at TIMESTAMP
+);</pre>
+                    </div>
+
+                    <div class="info-box green">
+                        <h3>Admin Functions</h3>
+                        <ul>
+                            <li>✓ Add credits to user account</li>
+                            <li>✓ View user credit balance</li>
+                            <li>✓ Generate new API keys</li>
+                            <li>✓ Revoke API keys</li>
+                            <li>✓ View usage analytics per user</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Implementation Tab -->
+                <div class="tab-content" id="implementation">
+                    <h2>Implementation Roadmap</h2>
+
+                    <div class="phase blue">
+                        <h3>Phase 1: Infrastructure (Week 1)</h3>
+                        <ul>
+                            <li>Set up AWS account & S3 buckets</li>
+                            <li>Deploy ClickHouse cluster (3 nodes)</li>
+                            <li>Configure Redis cluster</li>
+                            <li>Set up Spark cluster</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase green">
+                        <h3>Phase 2: Ingestion (Week 2-3)</h3>
+                        <ul>
+                            <li>Build Spark ingestion jobs</li>
+                            <li>Implement schema detection</li>
+                            <li>Create master schema mapping</li>
+                            <li>Add deduplication logic</li>
+                            <li>Test with sample dataset</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase purple">
+                        <h3>Phase 3: API Development (Week 3-4)</h3>
+                        <ul>
+                            <li>Build FastAPI application</li>
+                            <li>Implement authentication middleware</li>
+                            <li>Create query builder</li>
+                            <li>Add credit deduction logic</li>
+                            <li>Implement caching layer</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase orange">
+                        <h3>Phase 4: Testing (Week 5)</h3>
+                        <ul>
+                            <li>Load testing (JMeter/Locust)</li>
+                            <li>Query optimization</li>
+                            <li>Add monitoring (Grafana/Prometheus)</li>
+                            <li>Documentation</li>
+                        </ul>
+                    </div>
+
+                    <div class="phase red">
+                        <h3>Phase 5: Deployment (Week 6)</h3>
+                        <ul>
+                            <li>Dockerize all services</li>
+                            <li>Set up Kubernetes manifests</li>
+                            <li>Configure CI/CD pipeline</li>
+                            <li>Production deployment</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Deployment Tab -->
+                <div class="tab-content" id="deployment">
+                    <h2>Deployment Strategy</h2>
+
+                    <div class="card-item">
+                        <h3>Docker Compose</h3>
+                        <pre>version: '3.8'
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    ports: ["8123:8123"]
+    
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    
+  api:
+    build: ./api
+    ports: ["8000:8000"]
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - REDIS_HOST=redis
+    
+  spark-master:
+    image: bitnami/spark
+    environment:
+      - SPARK_MODE=master
+    ports: ["8080:8080"]</pre>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card-item">
+                            <h3>AWS Architecture</h3>
+                            <ul>
+                                <li>EC2/EKS for compute</li>
+                                <li>S3 for data lake</li>
+                                <li>RDS for user/credit DB</li>
+                                <li>ElastiCache for Redis</li>
+                                <li>CloudWatch for monitoring</li>
+                            </ul>
+                        </div>
+                        <div class="card-item">
+                            <h3>Estimated Costs</h3>
+                            <ul>
+                                <li>Compute: $500-1000/mo</li>
+                                <li>Storage: $200-500/mo</li>
+                                <li>Network: $100-300/mo</li>
+                                <li><strong>Total: ~$1000-2000/mo</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="info-box green">
+                        <h3>CI/CD Pipeline</h3>
+                        <p>GitHub Actions → Docker Build → Push to ECR → Deploy to EKS</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="padding: 1.5rem;">
+                <h3>🚀 Next Steps</h3>
+                <ol>
+                    <li>Set up development environment (Docker, Python, Spark)</li>
+                    <li>Start with Phase 1: Infrastructure setup</li>
+                    <li>Build ingestion pipeline for CSV format first</li>
+                    <li>Test with small dataset before scaling</li>
+                    <li>Iterate and expand to other formats</li>
+                    <li>Deploy to production with monitoring</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.getAttribute('data-tab');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(targetTab).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
