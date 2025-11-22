@@ -59,7 +59,7 @@ Docker Desktop installed and running.
 code
 Bash
 docker-compose up --build
-Wait until you see ✅ Connected to ClickHouse! in the terminal.
+Wait until you see Connected to ClickHouse! in the terminal.
 3. Ingest Data
 Open a new terminal window and run:
 code

@@ -19,14 +19,14 @@ for i in range(10):
         # Connect as the new ADMIN user
         client = Client('clickhouse', user='admin', password='admin123')
         client.execute("SELECT 1")
-        print("✅ Connected to ClickHouse!")
+        print("Connected to ClickHouse!")
         break
     except Exception as e:
         print(f"⏳ Database not ready yet, waiting... ({e})")
         time.sleep(2)
 
 if client is None:
-    print("❌ Could not connect to Database after retries.")
+    print("Could not connect to Database after retries.")
 
 # 1. Setup Database (Run once automatically)
 @app.on_event("startup")
